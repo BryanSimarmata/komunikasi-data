@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konversi Sistem Bilangan kelompok 3  | komunikasi data </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: rgb(255, 253, 253);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+        }
+        input, button, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #333378;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1e7271;
+        }
+        .output {
+            margin-top: 20px;
+        }
+        .output div {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Konversi Sistem Bilangan kelompok 3  | komunikasi data</h2>
+    
+    <input type="text" id="inputValue" placeholder="Masukkan bilangan">
+    <select id="inputType">
+        <option value="binary">Biner</option>
+        <option value="octal">Oktal</option>
+        <option value="decimal">Desimal</option>
+        <option value="hexadecimal">Heksadesimal</option>
+    </select>
+    
+    <button onclick="convert()">Konversi</button>
+    
+    <div class="output" id="outputResult">
+        <div><strong>Biner:</strong> <span id="binaryOutput">-</span></div>
+        <div><strong>Oktal:</strong> <span id="octalOutput">-</span></div>
+        <div><strong>Desimal:</strong> <span id="decimalOutput">-</span></div>
+        <div><strong>Heksadesimal:</strong> <span id="hexadecimalOutput">-</span></div>
+    </div>
+</div>
+
+<script>
+    // Membuat inline Web Worker menggunakan Blob
+    const workerBlob = new Blob([`
+        self.onmessage = function(e) {
+            const { inputValue, inputType } = e.data;
+            let decimalValue;
+
+            // Konversi input ke desimal
+            switch (inputType) {
+                case "binary":
+                    decimalValue = parseInt(inputValue, 2);
+                    break;
+                case "octal":
+                    decimalValue = parseInt(inputValue, 8);
+                    break;
+                case "decimal":
+                    decimalValue = parseInt(inputValue, 10);
+                    break;
+                case "hexadecimal":
+                    decimalValue = parseInt(inputValue, 16);
+                    break;
+                default:
+                    self.postMessage({ error: "Tipe input tidak valid" });
+                    return;
+            }
+
+            // Jika input tidak valid
+            if (isNaN(decimalValue)) {
+                self.postMessage({ error: "Input tidak valid. Pastikan format input sesuai." });
+                return;
+            }
+
+            // Konversi desimal ke sistem bilangan lainnya
+            const result = {
+                binary: decimalValue.toString(2),
+                octal: decimalValue.toString(8),
+                decimal: decimalValue.toString(10),
+                hexadecimal: decimalValue.toString(16).toUpperCase()
+            };
+
+            self.postMessage({ result });
+        };
+    `], { type: 'application/javascript' });
+
+    const worker = new Worker(URL.createObjectURL(workerBlob));
+
+    worker.onmessage = function(e) {
+        if (e.data.error) {
+            alert(e.data.error);
+        } else {
+            const { binary, octal, decimal, hexadecimal } = e.data.result;
+
+            // Menampilkan hasil konversi
+            document.getElementById("binaryOutput").textContent = binary;
+            document.getElementById("octalOutput").textContent = octal;
+            document.getElementById("decimalOutput").textContent = decimal;
+            document.getElementById("hexadecimalOutput").textContent = hexadecimal;
+        }
+    };
+
+    function convert() {
+        const inputValue = document.getElementById("inputValue").value.trim();
+        const inputType = document.getElementById("inputType").value;
+
+        if (!inputValue) {
+            alert("Masukkan bilangan yang valid");
+            return;
+        }
+
+        // Kirim data ke worker untuk diproses
+        worker.postMessage({ inputValue, inputType });
+    }
+</script>
+
+</body>
+</html>
